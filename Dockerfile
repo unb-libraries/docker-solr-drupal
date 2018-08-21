@@ -2,7 +2,7 @@ FROM solr:7-alpine
 MAINTAINER UNB Libraries <libsupport@unb.ca>
 
 LABEL name="solr-drupal"
-LABEL vcs-ref=""
+LABEL vcs-ref="7.x"
 LABEL vcs-url="https://github.com/unb-libraries/docker-solr-drupal"
 
 ADD config /solr-conf
