@@ -17,7 +17,8 @@ drupal-solr-lib-unb-ca:
   - /solr-conf
 ```
 
-where
+where ```newspapers.lib.unb.ca``` is the name of the core you wish to create in Solr. By default the current 7.x schema from search_api_solr will be applied (from /solr-conf). If you need something different, extend this image and copy the files in their place.
+
 ## License
 - Solr for Docker/Drupal is licensed under the MIT License:
   - http://opensource.org/licenses/mit-license.html
