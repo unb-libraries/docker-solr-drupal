@@ -5,6 +5,7 @@ This image provides a quickstart basis for local Solr 7.x development in Drupal 
 ## Getting Started
 See [newspapers.lib.unb.ca](https://github.com/unb-libraries/newspapers.lib.unb.ca/blob/dev/docker-compose.yml) for an example of use. In your docker-compose.yml:
 
+### Single Core
 ```
 drupal-solr-lib-unb-ca:
   image: unblibraries/solr-drupal:7.x
@@ -18,6 +19,18 @@ drupal-solr-lib-unb-ca:
 ```
 
 where ```newspapers.lib.unb.ca``` is the name of the core you wish to create in Solr. By default the current 7.x schema from search_api_solr will be applied (from /solr-conf). If you need something different, extend this image and copy the files in their place.
+
+### Multiple Cores
+```
+drupal-solr-lib-unb-ca:
+  image: unblibraries/solr-drupal:7.x
+  ports:
+  - "8983:8983"
+  entrypoint:
+  - docker-entrypoint-multiple.sh
+  - newspapers.lib.unb.ca:/solr-conf
+  - pages.newspapers.lib.unb.ca:/solr-conf
+```
 
 ## License
 - Solr for Docker/Drupal is licensed under the MIT License:
