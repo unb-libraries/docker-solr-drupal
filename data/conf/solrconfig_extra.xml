@@ -20,4 +20,5 @@
       <str name="buildOnCommit">true</str>
       <str name="buildOnStartup">false</str>
     </lst>
-  </searchComponent>
+</searchComponent>
+<searchComponent name="spellcheck" class="solr.SpellCheckComponent" />
