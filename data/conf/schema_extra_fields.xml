@@ -1,3 +1,4 @@
+<dynamicField name="sort_X3b_en_*" type="collated_en" stored="false" indexed="false" docValues="true" />
 <dynamicField name="ts_X3b_en_*" type="text_en" stored="true" indexed="true" multiValued="false" termVectors="true" omitNorms="false" />
 <dynamicField name="tm_X3b_en_*" type="text_en" stored="true" indexed="true" multiValued="true" termVectors="true" omitNorms="false" />
 <dynamicField name="tos_X3b_en_*" type="text_en" stored="true" indexed="true" multiValued="false" termVectors="true" omitNorms="true" />
