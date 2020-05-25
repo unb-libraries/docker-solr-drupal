@@ -1,0 +1,17 @@
+version: '3.6'
+
+services:
+  drupal-solr-lib-unb-ca:
+    build:
+      context: .
+    expose:
+      - "8983"
+    networks:
+      - lib.unb.ca
+    entrypoint:
+      - docker-entrypoint-multiple.sh
+      - pages.lib.unb.ca:/solr-conf
+
+networks:
+  lib.unb.ca:
+    name: lib.unb.ca
