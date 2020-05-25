@@ -1,4 +1,4 @@
-FROM solr:8-alpine
+FROM solr:8.5
 MAINTAINER UNB Libraries <libsupport@unb.ca>
 
 LABEL name="solr-drupal"
