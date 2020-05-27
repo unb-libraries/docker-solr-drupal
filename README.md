@@ -8,7 +8,7 @@ See [newspapers.lib.unb.ca](https://github.com/unb-libraries/newspapers.lib.unb.
 ### Single Core
 ```
 drupal-solr-lib-unb-ca:
-  image: unblibraries/solr-drupal:7.x
+  image: unblibraries/solr-drupal:8.x-4.x
   ports:
   - "8983:8983"
   entrypoint:
@@ -23,7 +23,7 @@ where ```newspapers.lib.unb.ca``` is the name of the core you wish to create in 
 ### Multiple Cores
 ```
 drupal-solr-lib-unb-ca:
-  image: unblibraries/solr-drupal:7.x
+  image: unblibraries/solr-drupal:8.x-4.x
   ports:
   - "8983:8983"
   entrypoint:
