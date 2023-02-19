@@ -1,4 +1,4 @@
-FROM solr:8.4
+FROM solr:8.11
 MAINTAINER UNB Libraries <libsupport@unb.ca>
 
 ARG BUILD_DATE
