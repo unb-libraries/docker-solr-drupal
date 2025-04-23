@@ -1,0 +1,52 @@
+name: Test Logs for Errors
+
+on:
+  workflow_call:
+    inputs:
+      log-artifact-name:
+        description: 'The name of the build artifact that contains the logs to test.'
+        required: false
+        type: string
+        default: 'deployment-logs'
+      log-file-name:
+        description: 'The name of the filename in the artifact that contains the logs to test.'
+        required: false
+        type: string
+        default: 'deployment_logs.txt'
+
+jobs:
+  test-logs:
+    name: Check Deployment Logs for Errors
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      -
+        name: Install PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: 8.1
+          coverage: none
+          tools: composer:v2
+          extensions: curl,dom,gd,mbstring,posix,yaml,zip
+      -
+        name: Install dockworker
+        run: composer install --prefer-dist --no-progress --no-suggest
+        shell: bash
+      -
+        name: Retrieve The Log Artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ inputs.log-artifact-name }}
+          path: /tmp/logs
+      -
+        name: Check Logs for Errors
+        env:
+          LOG_FILE_NAME: ${{ inputs.log-file-name }}
+        run: vendor/bin/dockworker logs:check-file "/tmp/logs/$LOG_FILE_NAME"
+        shell: bash
+      -
+        name: Display Full Logs
+        env:
+          LOG_FILE_NAME: ${{ inputs.log-file-name }}
+        run: cat "/tmp/logs/$LOG_FILE_NAME"
+        shell: bash

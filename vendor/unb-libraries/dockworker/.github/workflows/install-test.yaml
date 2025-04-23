@@ -1,0 +1,53 @@
+name: Dockworker OS Support Tests
+
+on:
+  workflow_call:
+    inputs:
+      test-command:
+        description: 'The test command to execute in dockworker'
+        required: true
+        type: string
+    secrets:
+      SLACK_WEBHOOK_URL:
+        required: true
+
+jobs:
+  notify-start:
+    uses: unb-libraries/dockworker/.github/workflows/notify-start.yaml@6.x
+    if: always()
+    secrets:
+      SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+
+  install-run-test:
+    strategy:
+      matrix:
+        os: [ ubuntu-20.04, ubuntu-22.04, macos-12 ]
+    runs-on: ${{ matrix.os }}
+    defaults:
+      run:
+        working-directory: ./test
+    steps:
+      - uses: actions/checkout@v4
+      -
+        name: Install PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: 8.1
+          coverage: none
+          tools: composer:v2
+          extensions: curl,dom,gd,mbstring,posix,yaml,zip
+      -
+        name: Install dockworker
+        run: composer install
+        shell: bash
+      -
+        name: Test dockworker bootstrap
+        run: vendor/bin/dockworker ${{ inputs.test-command }}
+        shell: bash
+
+  notify-conclusion:
+    uses: unb-libraries/dockworker/.github/workflows/notify-conclusion.yaml@6.x
+    needs: [ install-run-test ]
+    if: always()
+    secrets:
+      SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}

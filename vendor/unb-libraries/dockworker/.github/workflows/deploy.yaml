@@ -1,0 +1,84 @@
+name: Build Image and Push, then Deploy to Kubernetes
+
+on:
+  workflow_call:
+    inputs:
+      branch-env-map:
+        description: 'A mapping of branches-to-k8s-namespaces. JSON dictionary format.'
+        required: true
+        type: string
+      deploy-branches:
+        description: 'A list of branches that should be deployed to kubernetes cluster. JSON list format.'
+        required: true
+        type: string
+      k8s-deployment-name:
+        description: 'The name of the kubernetes deployment to update.'
+        required: true
+        type: string
+    secrets:
+      KUBE_CONFIG:
+        required: true
+
+jobs:
+  deploy-image-to-k8s:
+    if:
+      contains(fromJSON(inputs.deploy-branches), github.ref_name)
+    name: Deploy New Image to Kubernetes Cluster
+    runs-on: ubuntu-latest
+    steps:
+      - uses: FranzDiebold/github-env-vars-action@v2
+      -
+        name: Retrieve Built Image Tag
+        uses: actions/download-artifact@v4
+        with:
+          name: build-image-tag
+          path: /tmp
+      -
+        name: Set Built Image Tag Locally
+        run: cat /tmp/image_tag.env >> $GITHUB_ENV
+      -
+        name: Write Deployment Namespaces To Local
+        run: echo '${{ inputs.branch-env-map }}' > /tmp/deployment_namespaces.json
+      -
+        name: Set Deployment Namespace
+        run: echo "DEPLOYMENT_NAMESPACE=$(jq -r '.${{ github.ref_name }}' /tmp/deployment_namespaces.json)" >> $GITHUB_ENV
+      - uses: azure/setup-kubectl@v4
+        name: Install Kubectl
+        with:
+          version: 'v1.28.0'
+        id: install-kubectl
+      - uses: azure/k8s-set-context@v4
+        name: Set Kubectl Context
+        with:
+          method: kubeconfig
+          kubeconfig: ${{ secrets.KUBE_CONFIG }}
+        id: setcontext-kubectl
+      -
+        name: Update Image In Kubernetes Deployment
+        run: |
+          kubectl set image "deployment/$DEPLOYMENT_NAME" "$DEPLOYMENT_NAME=$DEPLOYMENT_IMAGE" --namespace="$DEPLOYMENT_NAMESPACE"
+        env:
+          DEPLOYMENT_IMAGE: ${{ env.BUILD_IMAGE_FULL_NAME }}
+          DEPLOYMENT_NAME: ${{ inputs.k8s-deployment-name }}
+          DEPLOYMENT_NAMESPACE: ${{ env.DEPLOYMENT_NAMESPACE }}
+      -
+        name: Wait For Deployment To Finish
+        run: |
+          kubectl rollout status deployment "$DEPLOYMENT_NAME" --namespace="$DEPLOYMENT_NAMESPACE"
+        env:
+          DEPLOYMENT_NAME: ${{ inputs.k8s-deployment-name }}
+          DEPLOYMENT_NAMESPACE: ${{ env.DEPLOYMENT_NAMESPACE }}
+      -
+        name: Write deployment logs
+        run: |
+          sleep 60; kubectl logs "deployment/$DEPLOYMENT_NAME" --namespace="$DEPLOYMENT_NAMESPACE" > /tmp/deployment_logs.txt
+        env:
+          DEPLOYMENT_NAME: ${{ inputs.k8s-deployment-name }}
+          DEPLOYMENT_NAMESPACE: ${{ env.DEPLOYMENT_NAMESPACE }}
+      -
+        name: Archive Deployment Logs
+        uses: actions/upload-artifact@v4
+        with:
+          name: deployment-logs
+          path: /tmp/deployment_logs.txt
+          retention-days: 7

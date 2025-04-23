@@ -1,0 +1,21 @@
+#!/usr/bin/env php
+<?php
+
+include __DIR__ . '/../src/RepoFinder.php';
+
+use Dockworker\RepoFinder;
+use Robo\Runner;
+
+$repo_root = RepoFinder::findRepoRoot();
+$autoloaderPath = "$repo_root/vendor/autoload.php";
+
+$classLoader = require $autoloaderPath;
+$runner = new Runner();
+$runner
+  ->setRelativePluginNamespace('Robo\Plugin')
+  ->setSelfUpdateRepository('unb-libraries\dockworker')
+  ->setEnvConfigPrefix('DOCKWORKER')
+  ->setClassLoader($classLoader);
+
+$statusCode = $runner->execute($_SERVER['argv'], 'Dockworker', '6');
+exit($statusCode);

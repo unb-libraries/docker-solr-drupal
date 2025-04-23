@@ -1,0 +1,21 @@
+dockworker:
+  version: '6'
+  application:
+    description: A lightweight extensible drupal-solr docker image, suitable for development or production deployments.
+    uri: https://github.com/unb-libraries/docker-drupal-solr
+    identifiers:
+      id: docker-drupal-solr
+      slug: docker-drupal-solr
+      short_slug: drupalsolr
+      uuid: 6004
+    topics:
+      - nginx
+      - solr
+      - drupal
+  workflows:
+    image:
+      name: ghcr.io/unb-libraries/drupal-solr
+    vcs:
+      type: github
+      owner: unb-libraries
+      name: docker-drupal-solr

@@ -1,0 +1,20 @@
+<?php
+
+namespace JiraCloud\Issue;
+
+class Component implements \JsonSerializable
+{
+    public $id;
+    public $name;
+
+    public function __construct($name = null)
+    {
+        $this->name = $name;
+    }
+
+    #[\ReturnTypeWillChange]
+    public function jsonSerialize()
+    {
+        return array_filter(get_object_vars($this));
+    }
+}

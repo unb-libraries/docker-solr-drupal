@@ -1,9 +1,15 @@
 FROM solr:8.11
-MAINTAINER UNB Libraries <libsupport@unb.ca>
 
 ARG BUILD_DATE
 ARG VCS_REF
 ARG VERSION
+
+ADD data /solr-conf
+VOLUME /opt/solr/server/solr/mycores/
+COPY scripts /opt/docker-solr/scripts
+
+CMD ["solr-precreate", "drupal", "/solr-conf"]
+
 LABEL ca.unb.lib.generator="solr" \
   com.microscaling.docker.dockerfile="/Dockerfile" \
   com.microscaling.license="MIT" \
@@ -15,10 +21,5 @@ LABEL ca.unb.lib.generator="solr" \
   org.label-schema.vcs-url="https://github.com/unb-libraries/docker-solr-drupal" \
   org.label-schema.vendor="University of New Brunswick Libraries" \
   org.label-schema.version=$VERSION \
+  org.opencontainers.image.authors="UNB Libraries <libsupport@unb.ca>" \
   org.opencontainers.image.source="https://github.com/unb-libraries/docker-solr-drupal"
-
-ADD data /solr-conf
-VOLUME /opt/solr/server/solr/mycores/
-COPY scripts /opt/docker-solr/scripts
-
-CMD ["solr-precreate", "drupal", "/solr-conf"]

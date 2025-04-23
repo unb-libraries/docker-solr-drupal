@@ -1,0 +1,140 @@
+name: Build Image and Push, then Deploy to Kubernetes
+
+on:
+  workflow_call:
+    inputs:
+      branch-env-map:
+        description: 'A mapping of branches-to-k8s-namespaces. JSON dictionary format.'
+        required: true
+        type: string
+      build-themes:
+        description: 'Whether or not to build application themes using dockworker before building the image.'
+        required: false
+        type: boolean
+        default: false
+      deploy-branches:
+        description: 'A list of branches that should be deployed to kubernetes cluster. JSON list format.'
+        required: true
+        type: string
+      image-name:
+        description: 'The full, repository namespaced image name to build (without the tag).'
+        required: true
+        type: string
+      k8s-deployment-name:
+        description: 'The name of the kubernetes deployment to update.'
+        required: true
+        type: string
+      push-branches:
+        description: 'A list of branches that should be pushed to the container registry. JSON list format.'
+        required: true
+        type: string
+      platforms:
+        description: "A comma-separated list of platforms."
+        required: false
+        type: string
+        default: linux/amd64,linux/arm64/v8
+      test:
+        description: "A comma-separated list of tests to execute"
+        required: false
+        type: string
+      # postman-test-url:
+      #   description: 'URL of the API against which to run Postman tests.'
+      #   type: string
+      #   required: false
+    secrets:
+      KUBE_CONFIG:
+        required: true
+      SLACK_WEBHOOK_URL:
+        required: true
+      DOCKER_CLOUD_USER_NAME:
+        required: true
+      DOCKER_CLOUD_ACCESS_TOKEN:
+        required: true
+      GH_CONTAINER_REGISTRY_USER:
+        required: true
+      GH_CONTAINER_REGISTRY_TOKEN:
+        required: true
+      # POSTMAN_API_KEY:
+      #   required: true
+      # POSTMAN_TEST_GENERATION_COLLECTION_ID:
+      #   required: true
+      # POSTMAN_TEST_GENERATION_ENVIRONMENT_ID:
+      #   required: true
+      # POSTMAN_WORKSPACE_ID:
+      #   required: true
+
+jobs:
+  notify-start:
+    name: Notify of Start
+    if: always()
+    uses: unb-libraries/dockworker/.github/workflows/notify-start.yaml@6.x
+    secrets:
+      SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+
+  test-unit:
+    name: Unit tests
+    uses: unb-libraries/dockworker/.github/workflows/test-unit.yaml@6.x
+    if: contains(inputs.test, 'unit')
+
+  build-push-images:
+    uses: unb-libraries/dockworker/.github/workflows/build-push.yaml@6.x
+    needs: [ test-unit ]
+    with:
+      build-themes: ${{ inputs.build-themes }}
+      image-name: ${{ inputs.image-name }}
+      push-branches: ${{ inputs.push-branches }}
+      platforms: ${{ inputs.platforms }}
+    secrets:
+      GH_CONTAINER_REGISTRY_USER: ${{ secrets.GH_CONTAINER_REGISTRY_USER }}
+      GH_CONTAINER_REGISTRY_TOKEN: ${{ secrets.GH_CONTAINER_REGISTRY_TOKEN }}
+
+  update-docker-compose:
+    name: Update docker-compose
+    uses: unb-libraries/dockworker/.github/workflows/update-docker-compose.yaml@6.x
+    needs: [ build-push-images ]
+
+  # test-api:
+  #   name: API tests
+  #   uses: unb-libraries/dockworker/.github/workflows/test-api.yaml@6.x
+  #   needs: [ update-docker-compose ]
+  #   if: "${{ inputs.postman-test-url }}"
+  #   with:
+  #     postman-test-url: ${{ inputs.postman-test-url }}
+  #   secrets:
+  #     DOCKER_CLOUD_USER_NAME: ${{ secrets.DOCKER_CLOUD_USER_NAME }}
+  #     DOCKER_CLOUD_ACCESS_TOKEN: ${{ secrets.DOCKER_CLOUD_ACCESS_TOKEN }}
+  #     GH_CONTAINER_REGISTRY_USER: ${{ secrets.GH_CONTAINER_REGISTRY_USER }}
+  #     GH_CONTAINER_REGISTRY_TOKEN: ${{ secrets.GH_CONTAINER_REGISTRY_TOKEN }}
+  #     POSTMAN_API_KEY: ${{ secrets.POSTMAN_API_KEY }}
+  #     POSTMAN_TEST_GENERATION_COLLECTION_ID: ${{ secrets.POSTMAN_TEST_GENERATION_COLLECTION_ID }}
+  #     POSTMAN_TEST_GENERATION_ENVIRONMENT_ID: ${{ secrets.POSTMAN_TEST_GENERATION_ENVIRONMENT_ID }}
+  #     POSTMAN_WORKSPACE_ID: ${{ secrets.POSTMAN_WORKSPACE_ID }}
+
+  test-e2e:
+    name: End-to-end tests
+    uses: unb-libraries/dockworker/.github/workflows/test-e2e.yaml@6.x
+    if: contains(inputs.test, 'e2e')
+    needs: [ update-docker-compose ]
+    secrets:
+      DOCKER_CLOUD_USER_NAME: ${{ secrets.DOCKER_CLOUD_USER_NAME }}
+      DOCKER_CLOUD_ACCESS_TOKEN: ${{ secrets.DOCKER_CLOUD_ACCESS_TOKEN }}
+      GH_CONTAINER_REGISTRY_USER: ${{ secrets.GH_CONTAINER_REGISTRY_USER }}
+      GH_CONTAINER_REGISTRY_TOKEN: ${{ secrets.GH_CONTAINER_REGISTRY_TOKEN }}
+
+  deploy-image-to-k8s:
+    uses: unb-libraries/dockworker/.github/workflows/deploy.yaml@6.x
+    needs: [ test-e2e ]
+    with:
+      branch-env-map: ${{ inputs.branch-env-map }}
+      deploy-branches: ${{ inputs.deploy-branches }}
+      k8s-deployment-name: ${{ inputs.k8s-deployment-name }}
+    secrets:
+      KUBE_CONFIG: ${{ secrets.KUBE_CONFIG }}
+
+  notify-conclusion:
+    name: Notify of Conclusion
+    uses: unb-libraries/dockworker/.github/workflows/notify-conclusion.yaml@6.x
+    needs: [ deploy-image-to-k8s ]
+    if: always()
+    secrets:
+      SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
