@@ -4,11 +4,11 @@ ARG BUILD_DATE
 ARG VCS_REF
 ARG VERSION
 
-ADD data /solr-conf
-VOLUME /opt/solr/server/solr/mycores/
-COPY scripts /opt/docker-solr/scripts
+ENV SOLR_HOME=/solr_home
 
-CMD ["solr-precreate", "drupal", "/solr-conf"]
+ADD data /solr-conf
+VOLUME /solr_home
+COPY scripts /scripts
 
 LABEL ca.unb.lib.generator="solr" \
   com.microscaling.docker.dockerfile="/Dockerfile" \
