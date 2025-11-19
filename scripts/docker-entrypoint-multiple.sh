@@ -1,7 +1,6 @@
 #!/bin/bash
 #
 # docker-entrypoint for docker-solr
-
 set -e
 
 for core in "$@"
@@ -14,4 +13,4 @@ do
 done
 
 echo "Starting Solr..."
-docker-entrypoint.sh solr-foreground
+exec docker-entrypoint.sh solr-foreground

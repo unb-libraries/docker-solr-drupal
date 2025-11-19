@@ -4,11 +4,14 @@ ARG BUILD_DATE
 ARG VCS_REF
 ARG VERSION
 
-ENV SOLR_HOME=/solr_home
+ENV SOLR_MODULES="extraction,langid,ltr,analysis-extras"
 
 ADD data /solr-conf
-VOLUME /solr_home
 COPY scripts /scripts
+VOLUME /var/solr
+
+USER solr
+RUN mkdir /var/solr/data
 
 LABEL ca.unb.lib.generator="solr" \
   com.microscaling.docker.dockerfile="/Dockerfile" \
