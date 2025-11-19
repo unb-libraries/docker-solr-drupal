@@ -1,4 +1,4 @@
-FROM solr:9.9
+FROM solr:9.10
 
 ARG BUILD_DATE
 ARG VCS_REF
