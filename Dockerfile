@@ -8,6 +8,7 @@ LABEL ca.unb.lib.generator="solr" \
   org.opencontainers.image.description="solr-drupal provides a quickstart basis for local Solr development in Drupal 8." \
   org.opencontainers.image.vendor="University of New Brunswick Libraries" \
   org.opencontainers.image.authors="UNB Libraries <libsupport@unb.ca>" \
+  org.opencontainers.image.url="https://github.com/unb-libraries/docker-solr-drupal" \
   org.opencontainers.image.source="https://github.com/unb-libraries/docker-solr-drupal" \
   org.opencontainers.image.version="$VERSION" \
   org.opencontainers.image.revision="$VCS_REF" \
